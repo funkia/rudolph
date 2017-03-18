@@ -1,10 +1,10 @@
 import { withEffects } from "jabz";
 import { performStreamOrdered, Stream, Behavior, sink, Now } from "hareactive";
-import { takeUntilRight, updateRecord, fst } from "./utils";
+import { takeUntilRight, fst } from "./utils";
 
-// navigateS: Stream<string> - takes a stream of strings with new locations
+export type ParamBehavior = Behavior<Record<string, string>>;
+
 const navigateIO = withEffects((path: string) => window.location.hash = path);
-
 /**
  * Takes a stream of URLs. Whenever the stream has an occurrence it is
  * navigated to.
@@ -14,19 +14,18 @@ export function navigate(urlStream: Stream<string>): Now<Stream<string>> {
   return performStreamOrdered(urlStream.map(navigateIO));
 };
 
-// locationB: Behavior<string> - string of current location.
-export const locationB = sink(takeUntilRight("#", window.location.hash));
-window.addEventListener(
-  "hashchange", (evt) => locationB.push(takeUntilRight("#", evt.newURL)), false
-);
+// locationHashB: Behavior<string> - string of location.hash
+export const locationHashB = sink(takeUntilRight("#", window.location.hash));
+window.addEventListener("hashchange", (evt) => locationHashB.push(takeUntilRight("#", evt.newURL)), false);
 
 function readParams(paramRecord: Record<string, number>, path: string): Record<string, string> {
   const pathVars = path.split("/");
-  return Object.keys(paramRecord)
-    .reduce((rec, param) => updateRecord(rec, param, pathVars[paramRecord[param]]), <Record<string, string>>{});
+  let params: Record<string, string> = {};
+  for (const param of Object.keys(paramRecord)) {
+    params[param] = pathVars[paramRecord[param]];
+  }
+  return params;
 }
-
-export type ParamBehavior = Behavior<Record<string, string>>;
 
 /**
  * Takes a URL pattern, a behavior of the current location and returns a
@@ -34,11 +33,14 @@ export type ParamBehavior = Behavior<Record<string, string>>;
  * @param pattern An URL pattern of the form `foo/:param/bar`
  * @param locationBehavior A behavior describing the current location.
  */
-export function parsePathParams(
-  pattern: string, locationBehavior: Behavior<string>
-): Behavior<Record<string, string>> {
-  const paramRecord = pattern.split("/")
-    .reduce((rec, param, index) =>
-      (fst(param) === ":") ? updateRecord(rec, param.substr(1), index) : rec, <Record<string, number>>{});
+export function parsePathParams(pattern: string, locationBehavior: Behavior<string>): Behavior<Record<string, string>> {
+  const parts = pattern.split("/");
+  let paramRecord: Record<string, number> = {};
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (fst(part) === ":") {
+      paramRecord[part.substr(1)] = i;
+    }
+  }
   return locationBehavior.map((location) => readParams(paramRecord, location));
 }
