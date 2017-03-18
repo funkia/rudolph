@@ -19,7 +19,7 @@ type Out = {
 
 const menu = component<ToView, FromView, Out>(
   function* model({ listBtn, viewBtn }) {
-    const navs = combine(listBtn.mapTo("/list"), viewBtn.mapTo("/view"))
+    const navs = combine(listBtn.mapTo("/list"), viewBtn.mapTo("/view"));
     yield navigate(navs);
     const params = parsePathParams("/:item", locationB)
     const content = params.map(({item}) => {
