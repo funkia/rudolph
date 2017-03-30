@@ -5,5 +5,4 @@ import { createRouter } from "../../../src/router";
 const router = createRouter({
   useHash: true
 });
-
 runMain("#mount", main(router));

@@ -1,22 +1,57 @@
 import { withEffects } from "jabz";
 import { performStreamOrdered, Stream, Behavior, sink, Now } from "hareactive";
-import { takeUntilRight, fst } from "./utils";
 
 export type ParamBehavior = Behavior<Record<string, string>>;
 
+function fst<A>(arr: A[]): A;
+function fst(arr: string): string;
+function fst<A>(arr: A[] | string): A | string {
+  return arr[0];
+}
+
+function takeUntilRight(stop: string, str: string): string {
+  return str.substr(str.indexOf(stop) + 1);
+}
+
+type RouterConfig = {
+  useHash: boolean
+}
+
+export type Router = {
+  prefixPath: string,
+  path: Behavior<string>,
+  config: RouterConfig
+}
+
+/**
+ * Takes a configuration Object describing how to handle the routing.
+ * @param config An Object containing the router basic router configurations.
+ */
+export function createRouter(config: RouterConfig) {
+  return {
+    prefixPath: "",
+    path: config.useHash ? locationHashB : locationB,
+    config
+  };
+}
+
 const navigateIO = withEffects((path: string) => window.location.hash = path);
 /**
- * Takes a stream of URLs. Whenever the stream has an occurrence it is
+ * Takes a stream of Paths. Whenever the stream has an occurrence it is
  * navigated to.
- * @param urlStream A stream of URLs.
+ * @param pathStream A stream of paths.
  */
-export function navigate(urlStream: Stream<string>): Now<Stream<string>> {
-  return performStreamOrdered(urlStream.map(navigateIO));
+export function navigate(router: Router, pathStream: Stream<string>): Now<Stream<string>> {
+  const newUrl = pathStream.map(path => router.prefixPath + path);
+  return performStreamOrdered(newUrl.map(navigateIO));
 };
 
 // locationHashB: Behavior<string> - string of location.hash
 export const locationHashB = sink(takeUntilRight("#", window.location.hash));
 window.addEventListener("hashchange", (evt) => locationHashB.push(takeUntilRight("#", evt.newURL)), false);
+
+// TODO: locationB
+export const locationB = sink(window.location.pathname);
 
 function readParams(pattern: string, path: string): Record<string, string> {
   const patternParts = pattern.split("/");
@@ -46,7 +81,7 @@ export function parsePathParams(pattern: string, locationBehavior: Behavior<stri
   return locationBehavior.map((location) => readParams(pattern, location));
 }
 
-type PathHandler<A> = (restUrl: string, params: Record<string, string>) => A;
+type PathHandler<A> = (subrouter: Router, params: Record<string, string>) => A;
 
 type ParsedPathPattern<A> = {
   path: string[];
@@ -77,7 +112,7 @@ function parsePathPattern<A>(pattern: string, handler: PathHandler<A>): ParsedPa
   return p;
 }
 
-type Routes<A> = Record<string, (rest: string, params: Record<string, string>) => A>;
+export type Routes<A> = Record<string, (router: Router, params: Record<string, string>) => A>;
 
 /**
  * Takes a description of the routes, a behavior of the current location and returns a
@@ -85,21 +120,27 @@ type Routes<A> = Record<string, (rest: string, params: Record<string, string>) =
  * @param routes A description of the routes, in the form {"/route/:urlParam"; (restUrl, params) => result}
  * @param locationBehavior A behavior describing the current location.
  */
-export function routePath<A>(routes: Routes<A>, locationBehavior: Behavior<string>): Behavior<A> {
+export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
+
   const parsedRoutes = Object.keys(routes).map((path) => parsePathPattern(path, routes[path]));
 
-  return locationBehavior.map((location) => {
+  return router.path.map((location) => {
     const locationParts = location.split("/");
     const match = parsedRoutes.find(({ path }: ParsedPathPattern<A>) => path.every((part, index) => {
-      console.log(part, locationParts[index]);
       return part === locationParts[index];
     }));
+    
     const rest = "/" + locationParts.slice(match.length).join("/");
-
+    const matchedPath = locationParts.slice(0, match.length).join("/");
+    const newRouter: Router = {
+      prefixPath: router.prefixPath + matchedPath,
+      path: Behavior.of(rest),
+      config: router.config
+    };
     let params: Record<string, string> = {};
     for (const key of Object.keys(match.params)) {
       params[key] = locationParts[match.params[key]];
     }
-    return match.handler(rest, params);
+    return match.handler(newRouter, params);
   });
 }

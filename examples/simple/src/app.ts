@@ -1,47 +1,59 @@
-import { combine } from "jabz";
-import { Stream, Now, Behavior } from "hareactive";
-import { elements, component, Component } from "@funkia/funnel";
-const { h1, span, input, button, div } = elements;
-import { locationHashB, navigate, parsePathParams, routePath } from "../../../src/router";
+import { combine, fgo } from "jabz";
+import { Behavior, map, Now, Stream, snapshot } from 'hareactive';
+import { elements, modelView, Component } from "@funkia/funnel";
+const { h1, span, button, section, div, input } = elements;
+import { navigate, routePath, Router } from "../../../src/router";
 
+const prefix = (pre: string) => (str: string) => pre + str; 
+
+const user = fgo(function* (userId) {
+  yield h1("User")
+  yield span(`Here you see the data with the user: ${userId}`)
+});
+
+const home = fgo(function* () {
+  yield h1("Home")
+  yield span("Here is your home screen.")
+});
+
+const notFound = fgo(function* () {
+  yield h1("404: Page not found")
+  yield span("Nothing to find here...")
+});
 
 type FromView = {
-  listBtn: Stream<any>
-  viewBtn: Stream<any>
+  userClicks: Stream<any>,
+  homeClicks: Stream<any>,
+  inputValue: Behavior<string>
+};
+
+type ToView = {};
+type Out = {};
+
+function menu(router: Router): Component<any> {
+  return modelView<ToView, FromView, Out>(menuModel(router), menuView(router));
 }
 
-type ToView = {
-  content: Behavior<Component<any>>
+const menuModel = (router: Router) => function* ({ userClicks, homeClicks, inputValue }: FromView) {
+  const userIds = snapshot(inputValue, userClicks);
+  const navs = combine(userIds.map(prefix("/user/")), homeClicks.mapTo("/"));
+  yield navigate(router, navs);
+  return [{}, {}];
+};
+
+function menuView(router: Router) {
+  return () => [
+    div([
+      button({ output: { "homeClicks": "click" } }, "Home"),
+      button({ output: { "userClicks": "click" } }, "Find User:"),
+      input()
+    ]),
+    section(routePath({
+      "/user/:userId": (subrouter, { userId }) => user(userId),
+      "/": home,
+      "*": notFound
+    }, router))
+  ];
 }
 
-type Out = {
-  router: any
-}
-
-const menu = component<ToView, FromView, Out>(
-  function* model({ listBtn, viewBtn }) {
-    const navs = combine(listBtn.mapTo("/list"), viewBtn.mapTo("/view"));
-    yield navigate(navs);
-
-    locationHashB.subscribe(console.log);
-    const content = routePath({
-      "/list/:userId/profile": (restUrl, params) => h1("ListContent").chain(() => span(restUrl + " : " + JSON.stringify(params))),
-      "/view": (restUrl, params) => h1("ViewContent").chain(() => span(restUrl + " : " + JSON.stringify(params))),
-      "*": (restUrl, params) => h1("404").chain(() => span(restUrl + " : " + JSON.stringify(params)))
-    }, locationHashB);
-
-
-    return [{ content }, {}];
-  }, ({ content }) => [
-    content,
-    button({ output: { click: "viewBtn" } }, "view"),
-    button({ output: { click: "listBtn" } }, "list")
-  ]);
-
-export const main = component<{ l: Behavior<string> }, { }, Out>(
-  function model({ }) {
-    //const a = parsePathParams("/users", locationHashB);
-    
-    return Now.of([{ l: locationHashB }, {}]);
-  }, ({ l }) => h1(["locationB: ", l]).chain(() => menu));
-    
+export const main = menu;
