@@ -1,5 +1,5 @@
 import { withEffects } from "jabz";
-import { performStreamOrdered, Stream, Behavior, sink, Now } from "hareactive";
+import { performStreamOrdered, performStream, Stream, Behavior, sink, Now, empty, snapshotWith } from "hareactive";
 
 export type ParamBehavior = Behavior<Record<string, string>>;
 
@@ -121,7 +121,6 @@ export type Routes<A> = Record<string, (router: Router, params: Record<string, s
  * @param locationBehavior A behavior describing the current location.
  */
 export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
-
   const parsedRoutes = Object.keys(routes).map((path) => parsePathPattern(path, routes[path]));
 
   return router.path.map((location) => {
@@ -129,7 +128,7 @@ export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
     const match = parsedRoutes.find(({ path }: ParsedPathPattern<A>) => path.every((part, index) => {
       return part === locationParts[index];
     }));
-    
+
     const rest = "/" + locationParts.slice(match.length).join("/");
     const matchedPath = locationParts.slice(0, match.length).join("/");
     const newRouter: Router = {
@@ -143,4 +142,24 @@ export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
     }
     return match.handler(newRouter, params);
   });
+}
+
+export const beforeUnload = empty<WindowEventMap["beforeunload"]>();
+window.addEventListener("beforeunload", (e) => { beforeUnload.push(e) });
+//beforeUnload.subscribe((e) => {e.returnValue = "\o/"});
+
+const preventNavigationIO = withEffects((event: WindowEventMap["beforeunload"], shouldWarn: boolean) => {
+  if (shouldWarn) {
+    event.returnValue = "\o/";
+    return "\o/";
+  }
+});
+
+/**
+ * Takes a behavior of a boolean, if true the user will have to confirm before unloading page.
+ * @param shouldWarnB A behavior of a boolean
+ */
+export function warnNavigation(shouldWarnB: Behavior<boolean>): Now<Stream<string>> {
+  const a = snapshotWith(preventNavigationIO, shouldWarnB, beforeUnload);
+  return performStream(a);
 }
