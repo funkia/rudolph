@@ -3,6 +3,9 @@ import { performStreamOrdered, performStream, Stream, Behavior, sink, Now, empty
 
 export type ParamBehavior = Behavior<Record<string, string>>;
 
+const supportHistory = "history" in window && "pushState" in window.history;
+const supportHash = "onhashchange" in window;
+
 function fst<A>(arr: A[]): A;
 function fst(arr: string): string;
 function fst<A>(arr: A[] | string): A | string {
@@ -15,19 +18,24 @@ function takeUntilRight(stop: string, str: string): string {
 
 type RouterConfig = {
   useHash: boolean
-}
+};
 
 export type Router = {
   prefixPath: string,
   path: Behavior<string>,
   config: RouterConfig
-}
+};
 
 /**
  * Takes a configuration Object describing how to handle the routing.
  * @param config An Object containing the router basic router configurations.
  */
-export function createRouter(config: RouterConfig) {
+export function createRouter(config: RouterConfig): Router {
+  if (config.useHash && !supportHash) {
+    throw new Error("No support for hash-routing.");
+  } else if (!supportHistory) {
+    throw new Error("No support for history API.");
+  }
   return {
     prefixPath: "",
     path: config.useHash ? locationHashB : locationB,
@@ -35,23 +43,30 @@ export function createRouter(config: RouterConfig) {
   };
 }
 
-const navigateIO = withEffects((path: string) => window.location.hash = path);
+// locationHashB: Behavior<string> - string of location.hash
+export const locationHashB = sink(takeUntilRight("#", window.location.hash) || "/");
+window.addEventListener("hashchange", (evt) => locationHashB.push(takeUntilRight("#", evt.newURL)), false);
+
+// locationB
+export const locationB = sink(window.location.pathname);
+window.addEventListener("popstate", (evt) => locationB.push((<Window>evt.target).location.pathname));
+
+const navigateHashIO = withEffects((path: string) => window.location.hash = path);
+const navigateIO = withEffects((path: string) => {
+  locationB.push(path);
+  return window.history.pushState({}, "", path);
+});
+
 /**
  * Takes a stream of Paths. Whenever the stream has an occurrence it is
  * navigated to.
  * @param pathStream A stream of paths.
  */
-export function navigate(router: Router, pathStream: Stream<string>): Now<Stream<string>> {
+export function navigate(router: Router, pathStream: Stream<string>): Now<Stream<any>> {
   const newUrl = pathStream.map(path => router.prefixPath + path);
-  return performStreamOrdered(newUrl.map(navigateIO));
-};
-
-// locationHashB: Behavior<string> - string of location.hash
-export const locationHashB = sink(takeUntilRight("#", window.location.hash));
-window.addEventListener("hashchange", (evt) => locationHashB.push(takeUntilRight("#", evt.newURL)), false);
-
-// TODO: locationB
-export const locationB = sink(window.location.pathname);
+  const navigateFn: any = router.config.useHash ? navigateHashIO : navigateIO;
+  return performStreamOrdered(newUrl.map(navigateFn));
+}
 
 function readParams(pattern: string, path: string): Record<string, string> {
   const patternParts = pattern.split("/");
@@ -145,8 +160,7 @@ export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
 }
 
 export const beforeUnload = empty<WindowEventMap["beforeunload"]>();
-window.addEventListener("beforeunload", (e) => { beforeUnload.push(e) });
-//beforeUnload.subscribe((e) => {e.returnValue = "\o/"});
+window.addEventListener("beforeunload", (e) => { beforeUnload.push(e); });
 
 const preventNavigationIO = withEffects((event: WindowEventMap["beforeunload"], shouldWarn: boolean) => {
   if (shouldWarn) {

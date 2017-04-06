@@ -3,7 +3,7 @@ import {main} from "./app";
 import { createRouter } from "../../../src/router";
 
 const router = createRouter({
-  useHash: true
+  useHash: false
 });
 
 runMain("#mount", main(router));

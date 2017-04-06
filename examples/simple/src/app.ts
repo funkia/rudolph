@@ -1,24 +1,24 @@
 import { combine, fgo } from "jabz";
-import { Behavior, map, Now, Stream, snapshot } from 'hareactive';
+import { Behavior, map, Now, Stream, snapshot } from "hareactive";
 import { elements, modelView, Component } from "@funkia/funnel";
 const { h1, span, button, section, div, input } = elements;
 import { navigate, routePath, Router } from "../../../src/router";
 
-const prefix = (pre: string) => (str: string) => pre + str; 
+const prefix = (pre: string) => (str: string) => pre + str;
 
-const user = fgo(function* (userId) {
-  yield h1("User")
-  yield span(`Here you see the data with the user: ${userId}`)
+const user = fgo(function* (userId: number) {
+  yield h1("User");
+  yield span(`Here you see the data with the user: ${userId}`);
 });
 
 const home = fgo(function* () {
-  yield h1("Home")
-  yield span("Here is your home screen.")
+  yield h1("Home");
+  yield span("Here is your home screen.");
 });
 
 const notFound = fgo(function* () {
-  yield h1("404: Page not found")
-  yield span("Nothing to find here...")
+  yield h1("404: Page not found");
+  yield span("Nothing to find here...");
 });
 
 type FromView = {
