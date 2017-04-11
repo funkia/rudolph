@@ -9,12 +9,12 @@
   "author": "Funkia",
   "license": "MIT",
   "peerDependencies": {
-    "hareactive": "0.0.16",
-    "jabz": "0.0.18"
+    "@funkia/hareactive": "0.0.19",
+    "@funkia/jabz": "0.0.19"
   },
   "devDependencies": {
-    "hareactive": "0.0.16",
-    "jabz": "0.0.18",
+    "@funkia/hareactive": "0.0.19",
+    "@funkia/jabz": "0.0.19",
     "typescript": "^2.3.0-dev.20170308"
   }
 }

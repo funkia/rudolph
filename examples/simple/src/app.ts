@@ -1,5 +1,5 @@
-import { combine, fgo } from "jabz";
-import { Behavior, map, Now, Stream, snapshot } from "hareactive";
+import { combine, fgo } from "@funkia/jabz";
+import { Behavior, map, Now, Stream, snapshot } from "@funkia/hareactive";
 import { elements, modelView, Component } from "@funkia/funnel";
 const { h1, span, button, section, div, input } = elements;
 import { navigate, routePath, Router } from "../../../src/router";

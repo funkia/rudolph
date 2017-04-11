@@ -10,9 +10,9 @@
   "author": "Funkia",
   "license": "MIT",
   "dependencies": {
-    "@funkia/funnel": "0.0.9",
-    "hareactive": "0.0.16",
-    "jabz": "0.0.18"
+    "@funkia/funnel": "0.0.11",
+    "@funkia/hareactive": "0.0.19",
+    "@funkia/jabz": "0.0.19"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",

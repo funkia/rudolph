@@ -1,5 +1,15 @@
-import { withEffects } from "jabz";
-import { performStreamOrdered, performStream, Stream, Behavior, sink, Now, empty, snapshotWith } from "hareactive";
+import { repeat, withEffects } from "@funkia/jabz";
+import {
+  Behavior,
+  empty,
+  Now,
+  performStream,
+  performStreamOrdered,
+  placeholderStream,
+  sink,
+  snapshotWith,
+  Stream
+} from "@funkia/hareactive";
 
 export type ParamBehavior = Behavior<Record<string, string>>;
 
@@ -127,7 +137,8 @@ function parsePathPattern<A>(pattern: string, handler: PathHandler<A>): ParsedPa
   return p;
 }
 
-export type Routes<A> = Record<string, (router: Router, params: Record<string, string>) => A>;
+type Handler<A> = (router: Router, params: Record<string, string>) => A;
+export type Routes<A> = Record<string, Handler<A>>;
 
 /**
  * Takes a description of the routes, a behavior of the current location and returns a
@@ -135,6 +146,7 @@ export type Routes<A> = Record<string, (router: Router, params: Record<string, s
  * @param routes A description of the routes, in the form {"/route/:urlParam"; (restUrl, params) => result}
  * @param locationBehavior A behavior describing the current location.
  */
+
 export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
   const parsedRoutes = Object.keys(routes).map((path) => parsePathPattern(path, routes[path]));
 
@@ -176,4 +188,43 @@ const preventNavigationIO = withEffects((event: WindowEventMap["beforeunload"], 
 export function warnNavigation(shouldWarnB: Behavior<boolean>): Now<Stream<string>> {
   const a = snapshotWith(preventNavigationIO, shouldWarnB, beforeUnload);
   return performStream(a);
+}
+
+type Tree<A> = {
+  params: Record<string, string>;
+  subtree: Record<string, Tree<A>>;
+  index: number;
+  handler?: Handler<A>;
+};
+
+// This is dirty... I know
+function addPath<A>(tree: Tree<A>, path: string, handler: Handler<A>): Tree<A> {
+  const nodes = path.split("/");
+  let parent = tree;
+  nodes.forEach((node, index) => {
+    if (fst(node) === ":") {
+      parent.params[index] = node.slice(1);
+    } else {
+      if (!(node in parent.subtree)) {
+        const subtree: Tree<A> = {
+          params: {},
+          subtree: {},
+          index
+        };
+        parent.subtree[node] = subtree;
+      }
+      parent = parent.subtree[node];
+    }
+  });
+  parent.handler = handler;
+  return tree;
+}
+
+function buildTree<A>(routes: Routes<A>): Tree<A> {
+  const initial: Tree<A> = {
+    params: {},
+    subtree: {},
+    index: 0
+  };
+  return Object.keys(routes).reduce((tree, route) => addPath(tree, route, routes[route]), initial);
 }
