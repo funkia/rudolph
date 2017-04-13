@@ -8,7 +8,8 @@ import {
   placeholderStream,
   sink,
   snapshotWith,
-  Stream
+  Stream,
+  streamFromEvent
 } from "@funkia/hareactive";
 
 export type ParamBehavior = Behavior<Record<string, string>>;
@@ -146,7 +147,6 @@ export type Routes<A> = Record<string, Handler<A>>;
  * @param routes A description of the routes, in the form {"/route/:urlParam"; (restUrl, params) => result}
  * @param locationBehavior A behavior describing the current location.
  */
-
 export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
   const parsedRoutes = Object.keys(routes).map((path) => parsePathPattern(path, routes[path]));
 

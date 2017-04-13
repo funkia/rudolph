@@ -22,22 +22,22 @@ const style: Partial<CSSStyleDeclaration> = {
 };
 
 function directoryView(router: Router, directoryName: string) {
-  return function() {
+  return (): Component<any> => {
     return div([
-    span(`Directory: ${directoryName} is containing:`),
-    div([
-      button({ output: {A: "click"}}, "dir A"),
-      button({ output: {B: "click"}}, "dir B"),
-      button({ output: {C: "click"}}, "dir C"),
-      button({ output: {D: "click"}}, "file D")
-    ]),
-    div({ style },
-      routePath({
-        "/d/:dirname": (subrouter, { dirname }) => directory(subrouter, dirname),
-        "/f/:filename": (_, { filename }) => file(filename),
-        "*": () => Component.of()
-      }, router))
-  ]);
+      span(`Directory: ${directoryName} is containing:`),
+      div([
+        button({ output: { A: "click" } }, "dir A"),
+        button({ output: { B: "click" } }, "dir B"),
+        button({ output: { C: "click" } }, "dir C"),
+        button({ output: { D: "click" } }, "file D")
+      ]),
+      div({ style },
+        routePath({
+          "/d/:dirname": (subrouter, { dirname }) => directory(subrouter, dirname),
+          "/f/:filename": (_, { filename }) => file(filename),
+          "*": () => Component.of(undefined)
+        }, router))
+    ]);
   }
 }
 
@@ -49,13 +49,13 @@ type FromView = {
 }
 
 function directoryModel(router: Router) {
-  return function*({A, B, C, D}: FromView) {
+  return function* ({ A, B, C, D }: FromView) {
     const navs = combine(A.mapTo("/d/A"), B.mapTo("/d/B"), C.mapTo("/d/C"), D.mapTo("/f/D"));
     yield navigate(router, navs);
     return [{}, {}];
   };
 }
 
-const directory = (router: Router, dirname: string) =>  modelView(directoryModel(router), directoryView(router, dirname));
+const directory = (router: Router, dirname: string) => modelView(directoryModel(router), directoryView(router, dirname));
 
 export const main = (router: Router) => directory(router, "root");
