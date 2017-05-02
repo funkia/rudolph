@@ -1,17 +1,17 @@
-import { combine, go, fgo } from "@funkia/jabz";
-import { Behavior, map, Now, Stream, snapshot } from "@funkia/hareactive";
+import { combine, go, fgo, map } from "@funkia/jabz";
+import { Behavior, Now, Stream, snapshot } from "@funkia/hareactive";
 import { elements, modelView, Component } from "@funkia/funnel";
 const { h1, span, button, section, div, input } = elements;
 import { navigate, routePath, Router } from "../../../src/router";
 
 const prefix = (pre: string) => (str: string) => pre + str;
 
-const file = fgo(function* (filename: string) {
+const file = fgo(function* (filename: string): Iterator<Component<{}>> {
   yield h1("File: " + filename);
   yield span(`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lacinia libero id massa semper, sed maximus diam venenatis.`);
 });
 
-const notFound = fgo(function* () {
+const notFound = fgo(function* (): Iterator<Component<{}>> {
   yield h1("404: Page not found");
   yield span("Nothing to find here...");
 });
