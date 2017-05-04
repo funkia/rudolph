@@ -46,15 +46,15 @@ describe("routePath", () => {
      }, subrouter);
 
     const content = R.routePath({
-      "/": () => 1,
+      "/": () => H.Behavior.of(1),
       "/company": subRoute,
-      "*": () => 404
+      "*": () => H.Behavior.of(404)
     }, router);
 
-    assert.strictEqual(content.at(), 1);
+    assert.strictEqual(content.flatten().at(), 1);
     path.push("/company");
-    assert.strictEqual(content.at().at(), 0);
+    assert.strictEqual(content.flatten().at(), 0);
     path.push("/company/admin");
-    assert.strictEqual(content.at().at(), 2);
+    assert.strictEqual(content.flatten().at(), 2);
   });
 });

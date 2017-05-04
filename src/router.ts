@@ -77,12 +77,12 @@ type ParsedPathPattern<A> = {
   path: string[];
   params: Record<string, number>;
   length: number;
-  handler: Handler<A>
+  handler: RouteHandler<A>
 };
 
-type Handler<A> = (router: Router, params: Record<string, string>) => A;
+export type RouteHandler<A> = (router: Router, params: Record<string, string>) => A;
 
-function parsePathPattern<A>(pattern: string, handler: Handler<A>): ParsedPathPattern<A> {
+function parsePathPattern<A>(pattern: string, handler: RouteHandler<A>): ParsedPathPattern<A> {
   const patternParts = pattern.split("/");
   const p: ParsedPathPattern<A> = {
     path: [],
@@ -104,7 +104,7 @@ function parsePathPattern<A>(pattern: string, handler: Handler<A>): ParsedPathPa
   return p;
 }
 
-export type Routes<A> = Record<string, Handler<A>>;
+export type Routes<A> = Record<string, RouteHandler<A>>;
 
 /**
  * Takes a description of the routes, a behavior of the current location and returns a

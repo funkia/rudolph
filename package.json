@@ -1,14 +1,43 @@
 {
-  "name": "rudolph",
+  "name": "@funkia/rudolph",
   "version": "0.0.1",
   "description": "A pure functional router written in typescript",
-  "main": "dist/index.js",
+  "main": "dist/router.js",
+  "module": "dist/es2015/router.js",
+  "typings": "dist/defs/router.d.ts",
+  "directories": {
+    "dist": "dist"
+  },
   "scripts": {
     "test": "./node_modules/.bin/karma start --single-run",
-    "test-watch": "./node_modules/.bin/karma start"
+    "test-watch": "./node_modules/.bin/karma start",
+    "build": "npm run build-cmjs; npm run build-es2015",
+    "build-es2015": "./node_modules/.bin/tsc -P ./tsconfig-release.json --outDir 'dist/es2015' --module es6 --moduleResolution node",  
+    "build-cmjs": "./node_modules/.bin/tsc -P ./tsconfig-release.json",
+    "clean": "rm -rf coverage dist",
+    "prepublishOnly": "npm run build",
+    "release-major": "./node_modules/.bin/xyz --repo git@github.com:funkia/rudolph.git --increment major",
+    "release-minor": "./node_modules/.bin/xyz --repo git@github.com:funkia/rudolph.git --increment minor",
+    "release-patch": "./node_modules/.bin/xyz --repo git@github.com:funkia/rudolph.git --increment patch"
   },
   "author": "Funkia",
   "license": "MIT",
+  "homepage": "https://github.com/funkia/rudolph#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/funkia/rudolph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/funkia/rudolph/issues"
+  },
+  "keywords": [
+    "pure",
+    "functional",
+    "router",
+    "frp",
+    "functional reactive programming",
+    "typescript"
+  ],
   "peerDependencies": {
     "@funkia/hareactive": "0.0.20",
     "@funkia/jabz": "0.0.19"
@@ -25,6 +54,7 @@
     "karma-mocha-reporter": "^2.2.3",
     "karma-typescript": "^3.0.1",
     "mocha": "^3.3.0",
-    "typescript": "^2.3.0-dev.20170308"
+    "typescript": "^2.3.0-dev.20170308",
+    "xyz": "^2.1.0"
   }
 }
