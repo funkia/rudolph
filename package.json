@@ -1,6 +1,6 @@
 {
   "name": "@funkia/rudolph",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A pure functional router written in typescript",
   "main": "dist/router.js",
   "module": "dist/es2015/router.js",
@@ -12,7 +12,7 @@
     "test": "./node_modules/.bin/karma start --single-run",
     "test-watch": "./node_modules/.bin/karma start",
     "build": "npm run build-cmjs; npm run build-es2015",
-    "build-es2015": "./node_modules/.bin/tsc -P ./tsconfig-release.json --outDir 'dist/es2015' --module es6 --moduleResolution node",  
+    "build-es2015": "./node_modules/.bin/tsc -P ./tsconfig-release.json --outDir 'dist/es2015' --module es6 --moduleResolution node",
     "build-cmjs": "./node_modules/.bin/tsc -P ./tsconfig-release.json",
     "clean": "rm -rf coverage dist",
     "prepublishOnly": "npm run build",
