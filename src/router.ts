@@ -114,25 +114,31 @@ export type Routes<A> = Record<string, RouteHandler<A>>;
  */
 export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
   const parsedRoutes = Object.keys(routes).map((path) => parsePathPattern(path, routes[path]));
-
+  let last: ParsedPathPattern<A>;
+  let result: A;
   return router.path.map((location) => {
     const locationParts = location.split("/");
     const match = parsedRoutes.find(({ path }: ParsedPathPattern<A>) => path.every((part, index) => {
       return part === locationParts[index];
     }));
 
-    const rest = "/" + locationParts.slice(match.length).join("/");
-    const matchedPath = locationParts.slice(0, match.length).join("/");
-    const newRouter: Router = {
-      prefixPath: router.prefixPath + matchedPath,
-      path: Behavior.of(rest),
-      useHash: router.useHash
-    };
-    let params: Record<string, string> = {};
-    for (const key of Object.keys(match.params)) {
-      params[key] = locationParts[match.params[key]];
+    if (match !== last) {
+      last = match;
+      // const rest = "/" + locationParts.slice(match.length).join("/");
+      const matchedPath = locationParts.slice(0, match.length).join("/");
+
+      const newRouter: Router = {
+        prefixPath: router.prefixPath + matchedPath,
+        path: router.path.map(l => l.slice(matchedPath.length)),
+        useHash: router.useHash
+      };
+      let params: Record<string, string> = {};
+      for (const key of Object.keys(match.params)) {
+        params[key] = locationParts[match.params[key]];
+      }
+      result = match.handler(newRouter, params);
     }
-    return match.handler(newRouter, params);
+    return result;
   });
 }
 

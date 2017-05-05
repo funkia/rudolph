@@ -48,6 +48,7 @@
     "@funkia/jabz": "0.0.19",
     "@types/chai": "^3.5.2",
     "@types/mocha": "^2.2.41",
+    "@types/sinon": "^2.2.0",
     "chai": "^3.5.0",
     "codecov": "^2.1.0",
     "karma": "^1.6.0",
@@ -57,7 +58,8 @@
     "karma-mocha-reporter": "^2.2.3",
     "karma-typescript": "^3.0.1",
     "mocha": "^3.3.0",
-    "typescript": "^2.3.0-dev.20170308",
-    "xyz": "^2.1.0"
+    "xyz": "^2.1.0",
+    "sinon": "^2.2.0",
+    "typescript": "^2.3.0-dev.20170308"
   }
 }

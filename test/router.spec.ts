@@ -1,4 +1,5 @@
 import {assert} from "chai";
+import { spy } from "sinon";
 import * as H from "@funkia/hareactive";
 import * as R from "../src/router";
 
@@ -56,5 +57,32 @@ describe("routePath", () => {
     assert.strictEqual(content.flatten().at(), 0);
     path.push("/company/admin");
     assert.strictEqual(content.flatten().at(), 2);
+  });
+
+  it("should only call the subRouteHandler if only subroute changed", () => {
+    const path = H.sinkBehavior("/company/admin");
+    const router = R.createRouter({path});
+    const topRender = spy();
+    const subRender = spy();
+
+    const subRoute = (subrouter: R.Router) => R.routePath({
+      "/admin": () => { subRender(); return 1; },
+      "/user": () => { subRender(); return 2; }
+     }, subrouter);
+
+    const content = R.routePath({
+      "/company": (r) => {
+        topRender();
+        return subRoute(r);
+      }
+    }, router);
+
+    content.flatten().at();
+    assert.strictEqual(topRender.callCount, 1);
+    assert.strictEqual(subRender.callCount, 1);
+    path.push("/company/user");
+    content.flatten().at();
+    assert.strictEqual(topRender.callCount, 1);
+    assert.strictEqual(subRender.callCount, 2);
   });
 });
