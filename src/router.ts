@@ -10,9 +10,6 @@ import {
 
 export type ParamBehavior = Behavior<Record<string, string>>;
 
-const supportHistory = "history" in window && "pushState" in window.history;
-const supportHash = "onhashchange" in window;
-
 function fst<A>(arr: A[]): A;
 function fst(arr: string): string;
 function fst<A>(arr: A[] | string): A | string {
@@ -21,6 +18,10 @@ function fst<A>(arr: A[] | string): A | string {
 
 function takeUntilRight(stop: string, str: string): string {
   return str.substr(str.indexOf(stop) + 1);
+}
+
+function isEqual(obj1: any, obj2: any): boolean {
+  return Object.keys(obj1).every(key => (key in obj2) && (obj1[key] === obj2[key]));
 }
 
 export type Router = {
@@ -37,6 +38,8 @@ export function createRouter({
   useHash = false,
   path = useHash ? locationHashB : locationB
 }: Partial<Router>): Router {
+  const supportHistory = "history" in window && "pushState" in window.history;
+  const supportHash = "onhashchange" in window;
   if (useHash && !supportHash) {
     throw new Error("No support for hash-routing.");
   } else if (!supportHistory) {
@@ -114,16 +117,23 @@ export type Routes<A> = Record<string, RouteHandler<A>>;
  */
 export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
   const parsedRoutes = Object.keys(routes).map((path) => parsePathPattern(path, routes[path]));
-  let last: ParsedPathPattern<A>;
+  let lastMatch: ParsedPathPattern<A>;
   let result: A;
+  let lastParams: Record<string, string>;
+  let lastRouter: Router;
   return router.path.map((location) => {
     const locationParts = location.split("/");
     const match = parsedRoutes.find(({ path }: ParsedPathPattern<A>) => path.every((part, index) => {
       return part === locationParts[index];
     }));
 
-    if (match !== last) {
-      last = match;
+    const params = Object.keys(match.params).reduce((paramsAcc: any, key) => {
+      paramsAcc[key] = locationParts[match.params[key]];
+      return paramsAcc;
+    }, {});
+
+    if (match !== lastMatch) {
+      lastMatch = match;
       // const rest = "/" + locationParts.slice(match.length).join("/");
       const matchedPath = locationParts.slice(0, match.length).join("/");
 
@@ -132,11 +142,13 @@ export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
         path: router.path.map(l => l.slice(matchedPath.length)),
         useHash: router.useHash
       };
-      let params: Record<string, string> = {};
-      for (const key of Object.keys(match.params)) {
-        params[key] = locationParts[match.params[key]];
-      }
+
+      lastParams = params;
+      lastRouter = newRouter;
       result = match.handler(newRouter, params);
+    } else if (!isEqual(lastParams, params)) {
+      lastParams = params;
+      result = match.handler(lastRouter, params);
     }
     return result;
   });

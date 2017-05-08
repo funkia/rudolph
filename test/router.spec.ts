@@ -85,4 +85,42 @@ describe("routePath", () => {
     assert.strictEqual(topRender.callCount, 1);
     assert.strictEqual(subRender.callCount, 2);
   });
+
+  it("should parse \"/:name\" and pass as route parameters", () => {
+    const path = H.sinkBehavior("/user/john123");
+    const router = R.createRouter({path});
+
+    let params: any;
+
+    const content = R.routePath({
+      "/user/:userId": (_, p) => { params = p; return 1; },
+      "/admin": (_, p) => { params = p; return 2; },
+      "*": (_, p) => { params = p; return 0; }
+    }, router);
+
+    content.subscribe(() => ""); // Needed to activate the reactive
+    assert.deepEqual(params, {"userId": "john123"});
+    path.push("/admin");
+    assert.deepEqual(params, {});
+    path.push("/user/jack321/profile");
+    assert.deepEqual(params, {"userId": "jack321"});
+  });
+
+  it("should recall the RouteHandler if \"/:name\" changes", () => {
+    const path = H.sinkBehavior("/user/john123");
+    const router = R.createRouter({path});
+
+    let params: any;
+
+    const content = R.routePath({
+      "/user/:userId": (_, p) => { params = p; return 1; },
+      "/admin": (_, p) => { params = p; return 2; },
+      "*": (_, p) => { params = p; return 0; }
+    }, router);
+
+    content.subscribe(() => ""); // Needed to activate the reactive
+    assert.deepEqual(params, {"userId": "john123"});
+    path.push("/user/jack321/profile");
+    assert.deepEqual(params, {"userId": "jack321"});
+  });
 });
