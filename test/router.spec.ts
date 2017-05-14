@@ -1,4 +1,4 @@
-import {assert} from "chai";
+import { assert } from "chai";
 import { spy } from "sinon";
 import * as H from "@funkia/hareactive";
 import * as R from "../src/router";
@@ -106,7 +106,7 @@ describe("routePath", () => {
     assert.deepEqual(params, {"userId": "jack321"});
   });
 
-  it("should recall the RouteHandler if \"/:name\" changes", () => {
+  it("should recall the RouteHandler if \"/:name\" changes with new value", () => {
     const path = H.sinkBehavior("/user/john123");
     const router = R.createRouter({path});
 

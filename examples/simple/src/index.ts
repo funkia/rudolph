@@ -1,4 +1,4 @@
-import {runComponent} from "@funkia/funnel";
+import {runComponent} from "@funkia/turbine";
 import {main} from "./app";
 import { createRouter } from "../../../src/router";
 

@@ -1,0 +1,27 @@
+{
+  "name": "funnel-simple-example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "simple": "./node_modules/.bin/webpack-dev-server --content-base simple simple/src/index.ts",
+    "recursive": "./node_modules/.bin/webpack-dev-server --content-base recursive recursive/src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Funkia",
+  "license": "MIT",
+  "dependencies": {
+    "@funkia/turbine": "0.0.13"
+  },
+  "devDependencies": {
+    "babel-core": "6.23.1",
+    "babel-loader": "6.4.0",
+    "babel-polyfill": "6.23.0",
+    "babel-preset-es2015": "6.22.0",
+    "css-loader": "^0.28.1",
+    "style-loader": "^0.17.0",
+    "ts-loader": "^2.0.3",
+    "webpack": "2.2.1",
+    "webpack-dev-server": "2.4.1"
+  }
+}

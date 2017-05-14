@@ -1,17 +1,17 @@
 import { combine, go, fgo, map } from "@funkia/jabz";
 import { Behavior, Now, Stream, snapshot } from "@funkia/hareactive";
-import { elements, modelView, Component } from "@funkia/funnel";
+import { elements, modelView, Component } from "@funkia/turbine";
 const { h1, span, button, section, div, input } = elements;
 import { navigate, routePath, Router } from "../../../src/router";
 
 const prefix = (pre: string) => (str: string) => pre + str;
 
-const file = fgo(function* (filename: string): Iterator<Component<{}>> {
+const file = fgo(function* (filename: string): IterableIterator<Component<{}>> {
   yield h1("File: " + filename);
   yield span(`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lacinia libero id massa semper, sed maximus diam venenatis.`);
 });
 
-const notFound = fgo(function* (): Iterator<Component<{}>> {
+const notFound = fgo(function* (): IterableIterator<Component<{}>> {
   yield h1("404: Page not found");
   yield span("Nothing to find here...");
 });
@@ -21,41 +21,37 @@ const style: Partial<CSSStyleDeclaration> = {
   padding: "15px"
 };
 
-function directoryView(router: Router, directoryName: string) {
-  return (): Component<any> => {
-    return div([
-      span(`Directory: ${directoryName} is containing:`),
-      div([
-        button({ output: { A: "click" } }, "dir A"),
-        button({ output: { B: "click" } }, "dir B"),
-        button({ output: { C: "click" } }, "dir C"),
-        button({ output: { D: "click" } }, "file D")
-      ]),
-      div({ style },
-        routePath({
-          "/d/:dirname": (subrouter, { dirname }) => directory(subrouter, dirname),
-          "/f/:filename": (_, { filename }) => file(filename),
-          "*": () => Component.of(undefined)
-        }, router))
-    ]);
-  }
+function directoryView({}, router: Router, directoryName: string): Component<any> {
+  return div([
+    span(`Directory: ${directoryName} is containing:`),
+    div([
+      button({ output: { A: "click" } }, "dir A"),
+      button({ output: { B: "click" } }, "dir B"),
+      button({ output: { C: "click" } }, "dir C"),
+      button({ output: { D: "click" } }, "file D")
+    ]),
+    div({ style },
+      routePath({
+        "/d/:dirname": (subrouter, { dirname }) => directory(subrouter, dirname),
+        "/f/:filename": (_, { filename }) => file(filename),
+        "*": () => Component.of(undefined)
+      }, router))
+  ]).map(({A, B, C, D}) => ({
+    navs: combine(
+      A.mapTo("/d/A"), B.mapTo("/d/B"), C.mapTo("/d/C"), D.mapTo("/f/D")
+    )
+  }));
 }
 
 type FromView = {
-  A: Stream<any>,
-  B: Stream<any>,
-  C: Stream<any>,
-  D: Stream<any>
+  navs: Stream<string>
+};
+
+function* directoryModel({ navs }: FromView, router: Router) {
+  yield navigate(router, navs);
+  return [{}, {}];
 }
 
-function directoryModel(router: Router) {
-  return function* ({ A, B, C, D }: FromView) {
-    const navs = combine(A.mapTo("/d/A"), B.mapTo("/d/B"), C.mapTo("/d/C"), D.mapTo("/f/D"));
-    yield navigate(router, navs);
-    return [{}, {}];
-  };
-}
-
-const directory = (router: Router, dirname: string) => modelView(directoryModel(router), directoryView(router, dirname));
+const directory = modelView(directoryModel, directoryView);
 
 export const main = (router: Router) => directory(router, "root");

@@ -1,6 +1,6 @@
 import { combine, fgo } from "@funkia/jabz";
 import { Behavior, map, Now, Stream, snapshot } from "@funkia/hareactive";
-import { elements, modelView, Component } from "@funkia/funnel";
+import { elements, modelView, Component } from "@funkia/turbine";
 const { h1, span, button, section, div, input } = elements;
 import { navigate, routePath, Router } from "../../../src/router";
 
@@ -30,19 +30,15 @@ type FromView = {
 type ToView = {};
 type Out = {};
 
-function menu(router: Router): Component<any> {
-  return modelView<ToView, FromView, Out>(menuModel(router), menuView(router));
-}
-
-const menuModel = (router: Router) => function* ({ userClicks, homeClicks, inputValue }: FromView) {
+const menuModel = function* ({ userClicks, homeClicks, inputValue }: FromView, router: Router) {
   const userIds = snapshot(inputValue, userClicks);
   const navs = combine(userIds.map(prefix("/user/")), homeClicks.mapTo("/"));
   yield navigate(router, navs);
   return [{}, {}];
 };
 
-function menuView(router: Router) {
-  return () => [
+function menuView({}, router: Router) {
+  return [
     div([
       button({ output: { "homeClicks": "click" } }, "Home"),
       button({ output: { "userClicks": "click" } }, "Find User:"),
@@ -55,5 +51,7 @@ function menuView(router: Router) {
     }, router))
   ];
 }
+
+const menu = modelView<ToView, FromView, Out>(menuModel, menuView);
 
 export const main = menu;
