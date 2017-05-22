@@ -10,5 +10,5 @@ Experimental.
 
 ## Install
 ```
-npm install --save @funkia/rudolph @funkia/hareactive @funkia/jabz
+npm install --save @funkia/rudolph @funkia/hareactive
 ```

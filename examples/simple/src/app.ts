@@ -6,7 +6,7 @@ import { navigate, routePath, Router } from "../../../src/router";
 
 const prefix = (pre: string) => (str: string) => pre + str;
 
-const user = fgo(function* (userId: number) {
+const user = fgo(function* (userId: string) {
   yield h1("User");
   yield span(`Here you see the data with the user: ${userId}`);
 });
