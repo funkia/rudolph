@@ -6,4 +6,4 @@ const router = createRouter({
   useHash: false
 });
 
-runComponent("#mount", main(router));
+runComponent("#mount", main({router}));

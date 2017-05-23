@@ -16,7 +16,7 @@
     "build-es2015": "tsc -P ./tsconfig-release.json --outDir 'dist/es2015' --module es6 --moduleResolution node",
     "build-cmjs": "tsc -P ./tsconfig-release.json",
     "clean": "rm -rf coverage dist",
-    "prepare": "npm run build",
+    "prepare": "npm run clean; npm run build",
     "release-major": "xyz --repo git@github.com:funkia/rudolph.git --increment major",
     "release-minor": "xyz --repo git@github.com:funkia/rudolph.git --increment minor",
     "release-patch": "xyz --repo git@github.com:funkia/rudolph.git --increment patch"
@@ -40,7 +40,7 @@
     "typescript"
   ],
   "dependencies": {
-    "@funkia/jabz": "0.0.22"
+    "@funkia/io": "0.0.1"
   },
   "peerDependencies": {
     "@funkia/hareactive": "0.0.31"

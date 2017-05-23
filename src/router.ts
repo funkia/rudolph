@@ -1,4 +1,4 @@
-import { withEffects } from "@funkia/jabz";
+import { withEffects } from "@funkia/io";
 import {
   Behavior, Now, Stream,
   streamFromEvent,

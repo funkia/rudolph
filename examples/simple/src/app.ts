@@ -24,25 +24,28 @@ const notFound = fgo(function* () {
 type FromView = {
   userClicks: Stream<any>,
   homeClicks: Stream<any>,
-  inputValue: Behavior<string>
+  userId: Behavior<string>
 };
 
 type ToView = {};
 type Out = {};
-
-const menuModel = function* ({ userClicks, homeClicks, inputValue }: FromView, router: Router) {
-  const userIds = snapshot(inputValue, userClicks);
-  const navs = combine(userIds.map(prefix("/user/")), homeClicks.mapTo("/"));
-  yield navigate(router, navs);
-  return [{}, {}];
+type In = {
+  router: Router
 };
 
-function menuView({}, router: Router) {
+const menuModel = function* ({ userClicks, homeClicks, userId }: FromView, {router}: In) {
+  const userIds = snapshot(userId, userClicks);
+  const navs = combine(userIds.map(prefix("/user/")), homeClicks.mapTo("/"));
+  yield navigate(router, navs);
+  return {};
+};
+
+function menuView({}, {router}: In) {
   return [
     div([
       button({ output: { "homeClicks": "click" } }, "Home"),
       button({ output: { "userClicks": "click" } }, "Find User:"),
-      input()
+      input({ output: { userId: "inputValue" }})
     ]),
     section(routePath({
       "/user/:userId": (subrouter, { userId }) => user(userId),

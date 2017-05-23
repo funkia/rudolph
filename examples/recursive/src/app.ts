@@ -21,7 +21,12 @@ const style: Partial<CSSStyleDeclaration> = {
   padding: "15px"
 };
 
-function directoryView({}, router: Router, directoryName: string): Component<any> {
+type DirectoryIn = {
+  router: Router,
+  directoryName: string
+};
+
+function directoryView({}, {router, directoryName}: DirectoryIn): Component<any> {
   return div([
     span(`Directory: ${directoryName} is containing:`),
     div([
@@ -32,7 +37,7 @@ function directoryView({}, router: Router, directoryName: string): Component<any
     ]),
     div({ style },
       routePath({
-        "/d/:dirname": (subrouter, { dirname }) => directory(subrouter, dirname),
+        "/d/:dirname": (subrouter, { dirname }) => directory({router: subrouter, directoryName: dirname}),
         "/f/:filename": (_, { filename }) => file(filename),
         "*": () => Component.of(undefined)
       }, router))
@@ -47,11 +52,15 @@ type FromView = {
   navs: Stream<string>
 };
 
-function* directoryModel({ navs }: FromView, router: Router) {
+function* directoryModel({ navs }: FromView, {router}: DirectoryIn) {
   yield navigate(router, navs);
-  return [{}, {}];
+  return {};
 }
 
 const directory = modelView(directoryModel, directoryView);
 
-export const main = (router: Router) => directory(router, "root");
+type In = {
+  router: Router
+};
+
+export const main = ({router}: In) => directory({router, directoryName: "root"});
