@@ -6,12 +6,15 @@ import * as R from "../src/router";
 describe("routePath", () => {
   it("should change the behavior according to the path", () => {
     const path = H.sinkBehavior("/admin");
-    const router = R.createRouter({path});
-    const content = R.routePath({
-      "/": () => 1,
-      "/user": () => 2,
-      "/admin": () => 3
-    }, router);
+    const router = R.createRouter({ path });
+    const content = R.routePath(
+      {
+        "/": () => 1,
+        "/user": () => 2,
+        "/admin": () => 3
+      },
+      router
+    );
 
     assert.strictEqual(content.at(), 3);
     path.push("/user");
@@ -20,15 +23,18 @@ describe("routePath", () => {
     assert.strictEqual(content.at(), 1);
   });
 
-  it("should use the \"*\" route as fallback", () => {
+  it('should use the "*" route as fallback', () => {
     const path = H.sinkBehavior("/cats");
-    const router = R.createRouter({path});
-    const content = R.routePath({
-      "/": () => 1,
-      "/user": () => 2,
-      "/admin": () => 3,
-      "*": () => 404
-    }, router);
+    const router = R.createRouter({ path });
+    const content = R.routePath(
+      {
+        "/": () => 1,
+        "/user": () => 2,
+        "/admin": () => 3,
+        "*": () => 404
+      },
+      router
+    );
     assert.strictEqual(content.at(), 404);
     path.push("/user");
     assert.strictEqual(content.at(), 2);
@@ -38,19 +44,26 @@ describe("routePath", () => {
 
   it("should support subrouting", () => {
     const path = H.sinkBehavior("/");
-    const router = R.createRouter({path});
+    const router = R.createRouter({ path });
 
-    const subRoute = (subrouter: R.Router) => R.routePath({
-      "/admin": () => 2,
-      "/user": () => 3,
-      "*": () => 0
-     }, subrouter);
+    const subRoute = (subrouter: R.Router) =>
+      R.routePath(
+        {
+          "/admin": () => 2,
+          "/user": () => 3,
+          "*": () => 0
+        },
+        subrouter
+      );
 
-    const content = R.routePath({
-      "/": () => H.Behavior.of(1),
-      "/company": subRoute,
-      "*": () => H.Behavior.of(404)
-    }, router);
+    const content = R.routePath(
+      {
+        "/": () => H.Behavior.of(1),
+        "/company": subRoute,
+        "*": () => H.Behavior.of(404)
+      },
+      router
+    );
 
     assert.strictEqual(content.flatten().at(), 1);
     path.push("/company");
@@ -61,21 +74,34 @@ describe("routePath", () => {
 
   it("should only call the subRouteHandler if only subroute changed", () => {
     const path = H.sinkBehavior("/company/admin");
-    const router = R.createRouter({path});
+    const router = R.createRouter({ path });
     const topRender = spy();
     const subRender = spy();
 
-    const subRoute = (subrouter: R.Router) => R.routePath({
-      "/admin": () => { subRender(); return 1; },
-      "/user": () => { subRender(); return 2; }
-     }, subrouter);
+    const subRoute = (subrouter: R.Router) =>
+      R.routePath(
+        {
+          "/admin": () => {
+            subRender();
+            return 1;
+          },
+          "/user": () => {
+            subRender();
+            return 2;
+          }
+        },
+        subrouter
+      );
 
-    const content = R.routePath({
-      "/company": (r) => {
-        topRender();
-        return subRoute(r);
-      }
-    }, router);
+    const content = R.routePath(
+      {
+        "/company": (r) => {
+          topRender();
+          return subRoute(r);
+        }
+      },
+      router
+    );
 
     content.flatten().at();
     assert.strictEqual(topRender.callCount, 1);
@@ -86,41 +112,65 @@ describe("routePath", () => {
     assert.strictEqual(subRender.callCount, 2);
   });
 
-  it("should parse \"/:name\" and pass as route parameters", () => {
+  it('should parse "/:name" and pass as route parameters', () => {
     const path = H.sinkBehavior("/user/john123");
-    const router = R.createRouter({path});
+    const router = R.createRouter({ path });
 
     let params: any;
 
-    const content = R.routePath({
-      "/user/:userId": (_, p) => { params = p; return 1; },
-      "/admin": (_, p) => { params = p; return 2; },
-      "*": (_, p) => { params = p; return 0; }
-    }, router);
+    const content = R.routePath(
+      {
+        "/user/:userId": (_, p) => {
+          params = p;
+          return 1;
+        },
+        "/admin": (_, p) => {
+          params = p;
+          return 2;
+        },
+        "*": (_, p) => {
+          params = p;
+          return 0;
+        }
+      },
+      router
+    );
 
     content.subscribe(() => ""); // Needed to activate the reactive
-    assert.deepEqual(params, {"userId": "john123"});
+    assert.deepEqual(params, { userId: "john123" });
     path.push("/admin");
     assert.deepEqual(params, {});
     path.push("/user/jack321/profile");
-    assert.deepEqual(params, {"userId": "jack321"});
+    assert.deepEqual(params, { userId: "jack321" });
   });
 
-  it("should recall the RouteHandler if \"/:name\" changes with new value", () => {
+  it('should recall the RouteHandler if "/:name" changes with new value', () => {
     const path = H.sinkBehavior("/user/john123");
-    const router = R.createRouter({path});
+    const router = R.createRouter({ path });
 
     let params: any;
 
-    const content = R.routePath({
-      "/user/:userId": (_, p) => { params = p; return 1; },
-      "/admin": (_, p) => { params = p; return 2; },
-      "*": (_, p) => { params = p; return 0; }
-    }, router);
+    const content = R.routePath(
+      {
+        "/user/:userId": (_, p) => {
+          params = p;
+          return 1;
+        },
+        "/admin": (_, p) => {
+          params = p;
+          return 2;
+        },
+        "*": (_, p) => {
+          params = p;
+          return 0;
+        }
+      },
+      router
+    );
 
     content.subscribe(() => ""); // Needed to activate the reactive
-    assert.deepEqual(params, {"userId": "john123"});
+    assert.deepEqual(params, { userId: "john123" });
     path.push("/user/jack321/profile");
-    assert.deepEqual(params, {"userId": "jack321"});
+    assert.deepEqual(params, { userId: "jack321" });
   });
 });

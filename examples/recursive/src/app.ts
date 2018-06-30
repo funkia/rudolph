@@ -6,12 +6,14 @@ import { navigate, routePath, Router } from "../../../src/router";
 
 const prefix = (pre: string) => (str: string) => pre + str;
 
-const file = fgo(function* (filename: string): IterableIterator<Component<{}>> {
+const file = fgo(function*(filename: string): IterableIterator<Component<{}>> {
   yield h1("File: " + filename);
-  yield span(`Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lacinia libero id massa semper, sed maximus diam venenatis.`);
+  yield span(
+    `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lacinia libero id massa semper, sed maximus diam venenatis.`
+  );
 });
 
-const notFound = fgo(function* (): IterableIterator<Component<{}>> {
+const notFound = fgo(function*(): IterableIterator<Component<{}>> {
   yield h1("404: Page not found");
   yield span("Nothing to find here...");
 });
@@ -22,11 +24,14 @@ const style: Partial<CSSStyleDeclaration> = {
 };
 
 type DirectoryIn = {
-  router: Router,
-  directoryName: string
+  router: Router;
+  directoryName: string;
 };
 
-function directoryView({}, {router, directoryName}: DirectoryIn): Component<any> {
+function directoryView(
+  {},
+  { router, directoryName }: DirectoryIn
+): Component<any> {
   return div([
     span(`Directory: ${directoryName} is containing:`),
     div([
@@ -35,24 +40,33 @@ function directoryView({}, {router, directoryName}: DirectoryIn): Component<any>
       button({ output: { C: "click" } }, "dir C"),
       button({ output: { D: "click" } }, "file D")
     ]),
-    div({ style },
-      routePath({
-        "/d/:dirname": (subrouter, { dirname }) => directory({router: subrouter, directoryName: dirname}),
-        "/f/:filename": (_, { filename }) => file(filename),
-        "*": () => Component.of(undefined)
-      }, router))
-  ]).map(({A, B, C, D}) => ({
+    div(
+      { style },
+      routePath(
+        {
+          "/d/:dirname": (subrouter, { dirname }) =>
+            directory({ router: subrouter, directoryName: dirname }),
+          "/f/:filename": (_, { filename }) => file(filename),
+          "*": () => Component.of(undefined)
+        },
+        router
+      )
+    )
+  ]).map(({ A, B, C, D }) => ({
     navs: combine(
-      A.mapTo("/d/A"), B.mapTo("/d/B"), C.mapTo("/d/C"), D.mapTo("/f/D")
+      A.mapTo("/d/A"),
+      B.mapTo("/d/B"),
+      C.mapTo("/d/C"),
+      D.mapTo("/f/D")
     )
   }));
 }
 
 type FromView = {
-  navs: Stream<string>
+  navs: Stream<string>;
 };
 
-function* directoryModel({ navs }: FromView, {router}: DirectoryIn) {
+function* directoryModel({ navs }: FromView, { router }: DirectoryIn) {
   yield navigate(router, navs);
   return {};
 }
@@ -60,7 +74,8 @@ function* directoryModel({ navs }: FromView, {router}: DirectoryIn) {
 const directory = modelView(directoryModel, directoryView);
 
 type In = {
-  router: Router
+  router: Router;
 };
 
-export const main = ({router}: In) => directory({router, directoryName: "root"});
+export const main = ({ router }: In) =>
+  directory({ router, directoryName: "root" });
