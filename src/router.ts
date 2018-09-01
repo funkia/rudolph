@@ -7,7 +7,8 @@ import {
   behaviorFromEvent,
   performStream,
   performStreamOrdered,
-  snapshotWith
+  snapshotWith,
+  SinkBehavior
 } from "@funkia/hareactive";
 
 export type ParamBehavior = Behavior<Record<string, string>>;
@@ -77,7 +78,7 @@ const navigateHashIO = withEffects((path: string) => {
   window.location.hash = path;
 });
 const navigateIO = withEffects((path: string) => {
-  locationB.push(path);
+  (<SinkBehavior<string>>locationB).newValue(path);
   window.history.pushState({}, "", path);
 });
 

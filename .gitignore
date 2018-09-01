@@ -10,3 +10,4 @@ generated/
 coverage/
 .vscode
 yarn.lock
+.cache

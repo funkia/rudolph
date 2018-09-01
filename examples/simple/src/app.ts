@@ -1,25 +1,23 @@
 import { combine, fgo } from "@funkia/jabz";
-import { Behavior, map, Now, Stream, snapshot } from "@funkia/hareactive";
-import { elements, modelView, Component } from "@funkia/turbine";
+import { Behavior, Stream, snapshot } from "@funkia/hareactive";
+import { elements, modelView, toComponent, Component } from "@funkia/turbine";
 const { h1, span, button, section, div, input } = elements;
 import { navigate, routePath, Router } from "../../../src/router";
 
 const prefix = (pre: string) => (str: string) => pre + str;
 
-const user = fgo(function*(userId: string) {
-  yield h1("User");
-  yield span(`Here you see the data with the user: ${userId}`);
-});
+const user = (userId: string) =>
+  toComponent([
+    h1("User"),
+    span(`Here you see the profile of user: ${userId}`)
+  ]);
 
-const home = fgo(function*() {
-  yield h1("Home");
-  yield span("Here is your home screen.");
-});
+const home = toComponent([h1("Home"), span("Here is your home screen.")]);
 
-const notFound = fgo(function*() {
-  yield h1("404: Page not found");
-  yield span("Nothing to find here...");
-});
+const notFound = toComponent([
+  h1("404: Page not found"),
+  span("Nothing to find here...")
+]);
 
 type FromView = {
   userClicks: Stream<any>;
@@ -33,7 +31,7 @@ type In = {
   router: Router;
 };
 
-const menuModel = function*(
+const menuModel = fgo(function*(
   { userClicks, homeClicks, userId }: FromView,
   { router }: In
 ) {
@@ -41,7 +39,7 @@ const menuModel = function*(
   const navs = combine(userIds.map(prefix("/user/")), homeClicks.mapTo("/"));
   yield navigate(router, navs);
   return {};
-};
+});
 
 function menuView({}, { router }: In) {
   return [
@@ -53,9 +51,9 @@ function menuView({}, { router }: In) {
     section(
       routePath(
         {
-          "/user/:userId": (subrouter, { userId }) => user(userId),
-          "/": home,
-          "*": notFound
+          "/user/:userId": (_subrouter, { userId }) => user(userId),
+          "/": () => home,
+          "*": () => notFound
         },
         router
       )
@@ -63,6 +61,6 @@ function menuView({}, { router }: In) {
   ];
 }
 
-const menu = modelView<ToView, FromView, Out>(menuModel, menuView);
+const menu = modelView(menuModel, menuView);
 
 export const main = menu;

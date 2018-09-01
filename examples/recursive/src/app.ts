@@ -1,22 +1,16 @@
-import { combine, go, fgo, map } from "@funkia/jabz";
-import { Behavior, Now, Stream, snapshot } from "@funkia/hareactive";
-import { elements, modelView, Component } from "@funkia/turbine";
-const { h1, span, button, section, div, input } = elements;
+import { combine, fgo } from "@funkia/jabz";
+import { Stream } from "@funkia/hareactive";
+import { elements, modelView, Component, toComponent } from "@funkia/turbine";
+const { h1, span, button, div } = elements;
 import { navigate, routePath, Router } from "../../../src/router";
 
-const prefix = (pre: string) => (str: string) => pre + str;
-
-const file = fgo(function*(filename: string): IterableIterator<Component<{}>> {
-  yield h1("File: " + filename);
-  yield span(
-    `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lacinia libero id massa semper, sed maximus diam venenatis.`
-  );
-});
-
-const notFound = fgo(function*(): IterableIterator<Component<{}>> {
-  yield h1("404: Page not found");
-  yield span("Nothing to find here...");
-});
+const file = (filename: string) =>
+  toComponent([
+    h1("File: " + filename),
+    span(
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lacinia libero id massa semper, sed maximus diam venenatis."
+    )
+  ]);
 
 const style: Partial<CSSStyleDeclaration> = {
   border: "1px solid black",
@@ -31,7 +25,7 @@ type DirectoryIn = {
 function directoryView(
   {},
   { router, directoryName }: DirectoryIn
-): Component<any> {
+): Component<{ navs: any }, any> {
   return div([
     span(`Directory: ${directoryName} is containing:`),
     div([
@@ -47,29 +41,34 @@ function directoryView(
           "/d/:dirname": (subrouter, { dirname }) =>
             directory({ router: subrouter, directoryName: dirname }),
           "/f/:filename": (_, { filename }) => file(filename),
-          "*": () => Component.of(undefined)
+          "*": () => Component.of({})
         },
         router
       )
     )
-  ]).map(({ A, B, C, D }) => ({
-    navs: combine(
-      A.mapTo("/d/A"),
-      B.mapTo("/d/B"),
-      C.mapTo("/d/C"),
-      D.mapTo("/f/D")
-    )
-  }));
+  ])
+    .map(({ A, B, C, D }) => ({
+      navs: combine(
+        A.mapTo("/d/A"),
+        B.mapTo("/d/B"),
+        C.mapTo("/d/C"),
+        D.mapTo("/f/D")
+      )
+    }))
+    .output({ navs: "navs" });
 }
 
 type FromView = {
   navs: Stream<string>;
 };
 
-function* directoryModel({ navs }: FromView, { router }: DirectoryIn) {
+const directoryModel = fgo(function*(
+  { navs }: FromView,
+  { router }: DirectoryIn
+) {
   yield navigate(router, navs);
   return {};
-}
+});
 
 const directory = modelView(directoryModel, directoryView);
 
