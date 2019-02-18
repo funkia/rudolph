@@ -35,18 +35,19 @@ const menuModel = fgo(function*(
   { userClicks, homeClicks, userId }: FromView,
   { router }: In
 ) {
-  const userIds = snapshot(userId, userClicks);
+  console.log({ userId });
+  const userIds = snapshot(userId, userClicks).log("userIds");
   const navs = combine(userIds.map(prefix("/user/")), homeClicks.mapTo("/"));
   yield navigate(router, navs);
   return {};
 });
 
 function menuView({}, { router }: In) {
-  return [
+  return div([
     div([
-      button({ output: { homeClicks: "click" } }, "Home"),
-      button({ output: { userClicks: "click" } }, "Find User:"),
-      input({ output: { userId: "inputValue" } })
+      button("Home").output({ homeClicks: "click" }),
+      button("Find User:").output({ userClicks: "click" }),
+      input().output({ userId: "value" })
     ]),
     section(
       routePath(
@@ -58,7 +59,7 @@ function menuView({}, { router }: In) {
         router
       )
     )
-  ];
+  ]);
 }
 
 const menu = modelView(menuModel, menuView);

@@ -5,15 +5,14 @@
   "main": "index.ts",
   "scripts": {
     "simple": "parcel simple/index.html",
-    "recursive": "parcel recursive/index.html",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "recursive": "parcel recursive/index.html"
   },
   "author": "Funkia",
   "license": "MIT",
   "dependencies": {
-    "@funkia/turbine": "^0.1.7"
+    "@funkia/turbine": "^0.2.2"
   },
   "devDependencies": {
-    "parcel-bundler": "^1.9.7"
+    "parcel-bundler": "^1.11.0"
   }
 }

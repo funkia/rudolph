@@ -58,11 +58,14 @@ export function createRouter({
   };
 }
 
+function id<A>(a: A) {
+  return a;
+}
 // locationHashB: Behavior<string> - string of location.hash
-export const locationHashB = behaviorFromEvent(
+export const locationHashB = behaviorFromEvent<string, "hashchange", Window>(
   window,
   "hashchange",
-  takeUntilRight("#", window.location.hash) || "/",
+  (w) => takeUntilRight("#", w.location.hash) || "/",
   (evt) => takeUntilRight("#", evt.newURL)
 );
 
@@ -70,8 +73,8 @@ export const locationHashB = behaviorFromEvent(
 export const locationB = behaviorFromEvent(
   window,
   "popstate",
-  window.location.pathname,
-  (evt) => window.location.pathname
+  (w) => w.location.pathname,
+  (e) => window.location.pathname
 );
 
 const navigateHashIO = withEffects((path: string) => {

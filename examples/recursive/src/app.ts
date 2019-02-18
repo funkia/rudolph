@@ -29,10 +29,10 @@ function directoryView(
   return div([
     span(`Directory: ${directoryName} is containing:`),
     div([
-      button({ output: { A: "click" } }, "dir A"),
-      button({ output: { B: "click" } }, "dir B"),
-      button({ output: { C: "click" } }, "dir C"),
-      button({ output: { D: "click" } }, "file D")
+      button("dir A").output({ A: "click" }),
+      button("dir B").output({ B: "click" }),
+      button("dir C").output({ C: "click" }),
+      button("file D").output({ D: "click" })
     ]),
     div(
       { style },
