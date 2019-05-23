@@ -3,13 +3,12 @@ import {
   Behavior,
   Now,
   Stream,
-  streamFromEvent,
-  behaviorFromEvent,
   performStream,
   performStreamOrdered,
   snapshotWith,
   SinkBehavior
 } from "@funkia/hareactive";
+import { streamFromEvent, behaviorFromEvent } from "@funkia/hareactive/dom";
 
 export type ParamBehavior = Behavior<Record<string, string>>;
 
@@ -58,10 +57,6 @@ export function createRouter({
   };
 }
 
-function id<A>(a: A) {
-  return a;
-}
-// locationHashB: Behavior<string> - string of location.hash
 export const locationHashB = behaviorFromEvent<string, "hashchange", Window>(
   window,
   "hashchange",
@@ -69,12 +64,11 @@ export const locationHashB = behaviorFromEvent<string, "hashchange", Window>(
   (evt) => takeUntilRight("#", evt.newURL)
 );
 
-// locationB
 export const locationB = behaviorFromEvent(
   window,
   "popstate",
   (w) => w.location.pathname,
-  (e) => window.location.pathname
+  (_e) => window.location.pathname
 );
 
 const navigateHashIO = withEffects((path: string) => {
