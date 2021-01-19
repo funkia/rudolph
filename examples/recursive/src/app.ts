@@ -1,80 +1,73 @@
-import { combine, fgo } from "@funkia/jabz";
+import { combine } from "@funkia/jabz";
 import { Stream } from "@funkia/hareactive";
-import { elements, modelView, Component, toComponent } from "@funkia/turbine";
-const { h1, span, button, div } = elements;
+import {
+  elements as E,
+  dynamic,
+  Component,
+  toComponent,
+  component,
+} from "@funkia/turbine";
 import { navigate, routePath, Router } from "../../../src/router";
 
 const file = (filename: string) =>
   toComponent([
-    h1("File: " + filename),
-    span(
+    E.h1("File: " + filename),
+    E.span(
       "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lacinia libero id massa semper, sed maximus diam venenatis."
-    )
+    ),
   ]);
 
 const style: Partial<CSSStyleDeclaration> = {
   border: "1px solid black",
-  padding: "15px"
+  padding: "15px",
 };
 
-type DirectoryIn = {
-  router: Router;
+type On = {
+  A: Stream<MouseEvent>;
+  B: Stream<MouseEvent>;
+  C: Stream<MouseEvent>;
+  D: Stream<MouseEvent>;
+};
+
+type Props = {
   directoryName: string;
-};
-
-function directoryView(
-  {},
-  { router, directoryName }: DirectoryIn
-): Component<{ navs: any }, any> {
-  return div([
-    span(`Directory: ${directoryName} is containing:`),
-    div([
-      button("dir A").output({ A: "click" }),
-      button("dir B").output({ B: "click" }),
-      button("dir C").output({ C: "click" }),
-      button("file D").output({ D: "click" })
-    ]),
-    div(
-      { style },
-      routePath(
-        {
-          "/d/:dirname": (subrouter, { dirname }) =>
-            directory({ router: subrouter, directoryName: dirname }),
-          "/f/:filename": (_, { filename }) => file(filename),
-          "*": () => Component.of({})
-        },
-        router
-      )
-    )
-  ])
-    .map(({ A, B, C, D }) => ({
-      navs: combine(
-        A.mapTo("/d/A"),
-        B.mapTo("/d/B"),
-        C.mapTo("/d/C"),
-        D.mapTo("/f/D")
-      )
-    }))
-    .output({ navs: "navs" });
-}
-
-type FromView = {
-  navs: Stream<string>;
-};
-
-const directoryModel = fgo(function*(
-  { navs }: FromView,
-  { router }: DirectoryIn
-) {
-  yield navigate(router, navs);
-  return {};
-});
-
-const directory = modelView(directoryModel, directoryView);
-
-type In = {
   router: Router;
 };
 
-export const main = ({ router }: In) =>
+const directory = (props: Props): Component<any, any> =>
+  component<On>((on, start) => {
+    const navs = combine(
+      on.A.mapTo("/d/A"),
+      on.B.mapTo("/d/B"),
+      on.C.mapTo("/d/C"),
+      on.D.mapTo("/f/D")
+    );
+    start(navigate(props.router, navs));
+
+    return E.div([
+      E.span(`Directory: ${props.directoryName} is containing:`),
+      E.div([
+        E.button("dir A").use({ A: "click" }),
+        E.button("dir B").use({ B: "click" }),
+        E.button("dir C").use({ C: "click" }),
+        E.button("file D").use({ D: "click" }),
+      ]),
+      E.div(
+        { style },
+        dynamic(
+          routePath(
+            {
+              "/d/:dirname": (subrouter, { dirname }) =>
+                directory({ router: subrouter, directoryName: dirname }),
+              "/f/:filename": (_, { filename }) => file(filename),
+              "*": () => Component.of({}),
+            },
+            props.router
+          )
+        )
+      ),
+    ]);
+  });
+
+export const main = ({ router }: Props) =>
   directory({ router, directoryName: "root" });

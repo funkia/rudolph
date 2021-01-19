@@ -4,9 +4,9 @@ import {
   Now,
   Stream,
   performStream,
-  performStreamOrdered,
   snapshotWith,
-  SinkBehavior
+  SinkBehavior,
+  flatFuturesOrdered
 } from "@funkia/hareactive";
 import { streamFromEvent, behaviorFromEvent } from "@funkia/hareactive/dom";
 
@@ -90,7 +90,7 @@ export function navigate(
 ): Now<Stream<any>> {
   const newUrl = pathStream.map((path) => router.prefixPath + path);
   const navigateFn = router.useHash ? navigateHashIO : navigateIO;
-  return performStreamOrdered(newUrl.map(navigateFn));
+  return performStream(newUrl.map(navigateFn));
 }
 
 type ParsedPathPattern<A> = {
@@ -144,7 +144,7 @@ export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
   const parsedRoutes = Object.keys(routes).map((path) =>
     parsePathPattern(path, routes[path])
   );
-  let lastMatch: ParsedPathPattern<A>;
+  let lastMatch: ParsedPathPattern<A> | undefined;
   let result: A;
   let lastParams: Record<string, string>;
   let lastRouter: Router;
@@ -154,9 +154,10 @@ export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
       path.every((part, index) => {
         return part === locationParts[index];
       })
-    );
+    )!;
 
-    const params = Object.keys(match.params).reduce((paramsAcc: any, key) => {
+
+    const params = Object.keys(match.params).reduce<Record<string,string>>((paramsAcc, key) => {
       paramsAcc[key] = locationParts[match.params[key]];
       return paramsAcc;
     }, {});
@@ -189,7 +190,7 @@ const preventNavigationIO = withEffects(
   (event: WindowEventMap["beforeunload"], shouldWarn: boolean) => {
     if (shouldWarn) {
       event.returnValue = "o/";
-      return "\o/";
+      return "o/";
     }
   }
 );
@@ -200,7 +201,7 @@ const preventNavigationIO = withEffects(
  */
 export function warnNavigation(
   shouldWarnB: Behavior<boolean>
-): Now<Stream<string>> {
+): Now<Stream<string | undefined>> {
   const a = snapshotWith(preventNavigationIO, shouldWarnB, beforeUnload);
-  return performStream(a);
+  return performStream(a).chain(flatFuturesOrdered);
 }

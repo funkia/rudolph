@@ -65,11 +65,11 @@ describe("routePath", () => {
       router
     );
 
-    assert.strictEqual(content.flatten().at(), 1);
+    assert.strictEqual(content.flat().at(), 1);
     path.push("/company");
-    assert.strictEqual(content.flatten().at(), 0);
+    assert.strictEqual(content.flat().at(), 0);
     path.push("/company/admin");
-    assert.strictEqual(content.flatten().at(), 2);
+    assert.strictEqual(content.flat().at(), 2);
   });
 
   it("should only call the subRouteHandler if only subroute changed", () => {
@@ -103,11 +103,11 @@ describe("routePath", () => {
       router
     );
 
-    content.flatten().at();
+    content.flat().at();
     assert.strictEqual(topRender.callCount, 1);
     assert.strictEqual(subRender.callCount, 1);
     path.push("/company/user");
-    content.flatten().at();
+    content.flat().at();
     assert.strictEqual(topRender.callCount, 1);
     assert.strictEqual(subRender.callCount, 2);
   });
