@@ -61,7 +61,7 @@ export const locationHashB = behaviorFromEvent<string, "hashchange", Window>(
   window,
   "hashchange",
   (w) => takeUntilRight("#", w.location.hash) || "/",
-  (evt) => takeUntilRight("#", evt.newURL)
+  (evt: HashChangeEvent) => takeUntilRight("#", evt.newURL)
 );
 
 export const locationB = behaviorFromEvent(
