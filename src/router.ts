@@ -133,12 +133,11 @@ function parsePathPattern<A>(
 export type Routes<A> = Record<string, RouteHandler<A>>;
 
 /**
- * Takes a description of the routes, a behavior of the current
- * location and returns a behavior with the result of parsing the
+ * Takes a description of the routes, and a router
+ * and returns a behavior with the result of parsing the
  * location according to the pattern.
  * @param routes A description of the routes, in the form
  * {"/route/:urlParam"; (restUrl, params) => result}
- * @param locationBehavior A behavior describing the current location.
  */
 export function routePath<A>(routes: Routes<A>, router: Router): Behavior<A> {
   const parsedRoutes = Object.keys(routes).map((path) =>
